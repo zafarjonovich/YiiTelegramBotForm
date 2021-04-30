@@ -42,7 +42,7 @@ class Form{
         /** @var FormField $formField */
         $formField = new $currentFormFieldData['class']($currentFormFieldData['params'],$this->telegramBotApi);
 
-        $currentFormFieldKey = $cache->getValue('currentFormField',[]);
+        $currentFormFieldKey = $cache->getValue('currentFormField',['name'=>'','message_id'=>null]);
 
         $formField->beforeHandling($cache);
 

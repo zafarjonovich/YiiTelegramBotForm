@@ -1,9 +1,10 @@
 <?php
 
 
-namespace zafarjonovich\YiiTelegramBotForm\components\formFields;
+namespace zafarjonovich\YiiTelegramBotForm\formFields;
 
 
+use zafarjonovich\Telegram\Emoji;
 use zafarjonovich\YiiTelegramBotForm\Cache;
 use zafarjonovich\YiiTelegramBotForm\FormField;
 
@@ -34,7 +35,7 @@ class CalendarFormField extends FormField{
 
         if(isset($this->telegramBotApi->update['callback_query'])){
             $data = json_decode($this->telegramBotApi->update['callback_query']['data'],true);
-            return $data and $data['go'] == 'back';
+            return $data and isset($data['go']) and $data['go'] == 'back';
         }
 
         return false;
@@ -66,7 +67,7 @@ class CalendarFormField extends FormField{
         if(isset($this->telegramBotApi->update['callback_query'])){
             $data = json_decode($this->telegramBotApi->update['callback_query']['data'],true);
 
-            if($data and $data[$this->params['name']]){
+            if($data and isset($data[$this->params['name']])){
                 return $data[$this->params['name']];
             }
         }
@@ -83,7 +84,7 @@ class CalendarFormField extends FormField{
         $keyboard = [];
         $count_days_of_week = 7;
         $default_callback = ['-'=>'-'];
-        $lock = '🔒';
+        $lock = Emoji::Decode('\\ud83d\\udd12');
 
         $year = $date->format('Y');
         $month = $date->format('m');
@@ -175,11 +176,11 @@ class CalendarFormField extends FormField{
             strtotime("00:01",strtotime("First day of",time())) != strtotime("00:01",strtotime("First day of",strtotime("{$year}-{$month}")))
         ){
             $prev_callback = ['todate'=>date("Y-m",strtotime("First day of last month",strtotime("{$year}-{$month}")))];
-            $keyboard[$row][] = ['text' => '⬅️', 'callback_data' => json_encode($prev_callback)];
+            $keyboard[$row][] = ['text' => Emoji::Decode("\\u2b05\\ufe0f"), 'callback_data' => json_encode($prev_callback)];
         }
 
         $next_callback = ['todate'=>date("Y-m",strtotime("First day of next month",strtotime("{$year}-{$month}")))];
-        $keyboard[$row][] = ['text'=>'➡️','callback_data'=>json_encode($next_callback)];
+        $keyboard[$row][] = ['text'=> Emoji::Decode("\\u27a1\\ufe0f"),'callback_data'=>json_encode($next_callback)];
 
         return $keyboard;
     }
@@ -225,6 +226,8 @@ class CalendarFormField extends FormField{
             );
         }
 
-        $cache->setValue('currentFormField.message_id',$response['result']['message_id']);
+        if($response['ok']){
+            $cache->setValue('currentFormField.message_id',$response['result']['message_id']);
+        }
     }
 }

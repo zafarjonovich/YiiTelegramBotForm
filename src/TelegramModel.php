@@ -32,7 +32,11 @@ class TelegramModel extends Model
             $value = floatval($value);
         }
 
-        $fields = [array_pop(explode('\\', get_class($this))) => [
+        $class_name = get_class($this);
+        $parts = explode('\\',$class_name);
+        $class_name = array_pop($parts);
+
+        $fields = [$class_name => [
             $currentFormFieldData['params']['name'] => $value
         ]];
 
