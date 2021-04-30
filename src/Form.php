@@ -59,7 +59,6 @@ class Form{
                 }
                 return;
             }
-
             if(
                 $formFieldValue = $formField->getFormFieldValue() and
                 $this->form->validateCurrentField($currentFormFieldData,$formFieldValue)
@@ -73,13 +72,13 @@ class Form{
                 }else{
                     $this->render($cache);
                 }
-
                 return;
             }else{
-                $errors = $this->form->getErrors($currentFormFieldData['params']['name']);
-                $formField->showErrors($cache,$errors);
+                if($errors = $this->form->getErrors($currentFormFieldData['params']['name'])){
+                    $formField->showErrors($cache,$errors);
+                    return;
+                }
             }
-
         }
 
         $cache->setValue('currentFormField',['name'=>$currentFormFieldData['params']['name']]);
