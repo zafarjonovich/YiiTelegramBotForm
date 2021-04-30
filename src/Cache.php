@@ -1,7 +1,7 @@
 <?php
 
 
-namespace zafarjonovich\YiiTelegramBotForm\components;
+namespace zafarjonovich\YiiTelegramBotForm;
 
 use yii\helpers\ArrayHelper;
 
@@ -11,7 +11,10 @@ class Cache
     private $content;
 
     public function __construct(&$cache_content){
-        $this->content = $cache_content;
+        $this->content = &$cache_content;
+        if(!isset($this->content['answers'])){
+            $this->content['answers'] = [];
+        }
     }
 
     public function setValue($path,$value){
@@ -26,7 +29,7 @@ class Cache
         return ArrayHelper::getValue($this->content,$path,$default);
     }
 
-    public function deleteLastFormFieldValue(){
-        array_pop($this->content['answers']);
+    public function deleteLastFormFieldValue($formFields){
+        array_shift($this->content['answers']);
     }
 }
