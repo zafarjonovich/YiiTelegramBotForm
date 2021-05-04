@@ -48,7 +48,7 @@ class TextFormField extends FormField{
 
     public function getFormFieldValue(){
 
-        if(!isset($this->telegramBotApi->update['message'])){
+        if(!isset($this->telegramBotApi->update['message']['text'])){
             return false;
         }
 

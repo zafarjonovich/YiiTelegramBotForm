@@ -56,9 +56,9 @@ class CalendarFormField extends FormField{
         if((bool)$this->telegramBotApi->message){
             $this->telegramBotApi->deleteMessage(
                 $this->telegramBotApi->chat_id,
-                $response['result']['message_id']
+                $this->telegramBotApi->message_id
             );
-            unset($this->telegramBotApi->message);
+            $this->telegramBotApi->message = false;
         }
     }
 
@@ -225,17 +225,17 @@ class CalendarFormField extends FormField{
         $options = [
             'reply_markup' =>$this->telegramBotApi->makeInlineKeyboard($keyboard)
         ];
-
-        if(isset($update['callback_query'])){
-            $response = $this->telegramBotApi->editMessageText(
+        
+        if((bool)$this->telegramBotApi->message){
+            $response = $this->telegramBotApi->sendMessage(
                 $this->telegramBotApi->chat_id,
-                $this->telegramBotApi->message_id,
                 $this->params['text'],
                 $options
             );
         }else{
-            $response = $this->telegramBotApi->sendMessage(
+            $response = $this->telegramBotApi->editMessageText(
                 $this->telegramBotApi->chat_id,
+                $this->telegramBotApi->message_id,
                 $this->params['text'],
                 $options
             );

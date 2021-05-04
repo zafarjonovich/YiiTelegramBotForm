@@ -68,9 +68,9 @@ class TimePickerFormField extends FormField{
         if((bool)$this->telegramBotApi->message){
             $this->telegramBotApi->deleteMessage(
                 $this->telegramBotApi->chat_id,
-                $response['result']['message_id']
+                $this->telegramBotApi->message_id
             );
-            unset($this->telegramBotApi->message);
+            $this->telegramBotApi->message = false;
         }
     }
 
@@ -147,6 +147,33 @@ class TimePickerFormField extends FormField{
 
     private function initTimes(){
 
+        $this->interval = $this->params['interval'] ?? [];
+
+        $locked_times = $this->params['lock']['times'] ?? [];
+
+        if(isset($this->params['lock']['beforeNow']) and $this->params['lock']['beforeNow']){
+
+            $locked_times = $this->params['lock']['times'] ?? [];
+
+            foreach (range(0,23) as $hour){
+                if($hour < date('H')){
+                    $hour = $hour < 10?"0{$hour}":$hour;
+                    $locked_times[] = $hour.':00';
+                    $locked_times[] = $hour.':30';
+                }else if($hour == date('H')){
+                    if(0 < date('i')){
+                        $locked_times[] = $hour.':00';
+                    }
+                    if(0 < date('i') + 30){
+                        $locked_times[] = $hour.':30';
+                    }
+                    break;
+                }
+            }
+
+            $this->params['lock']['times'] = $locked_times;
+        }
+
         if($this->hour === null){
             $this->hour = 00;
         }
@@ -183,6 +210,8 @@ class TimePickerFormField extends FormField{
 
         $lock = Emoji::Decode('\\ud83d\\udd12');
 
+        $locked_times = $this->params['lock']['times'] ?? [];
+
         for($h = $this->interval['start_hour']; $h <= $this->interval['end_hour']; $h += $this->delta_hour){
             if($this->hour == $this->interval['start_hour']){
                 $start = $this->interval['start_minute'];
@@ -196,7 +225,7 @@ class TimePickerFormField extends FormField{
             }
             for($m = $start; $m <= $end; $m += $this->delta_minute){
                 $show = $this->format($h).':'.$this->format($m);
-                if(isset($this->params['lock']) and in_array($show,$this->params['lock'])){
+                if(in_array($show,$locked_times)){
                     $buttons[] = ['text'=>$lock,'callback_data'=>json_encode($default_callback)];
                 }else{
                     $buttons[] = ['text'=>$show,'callback_data'=>json_encode(['a'=>$show])];
@@ -219,10 +248,12 @@ class TimePickerFormField extends FormField{
         $buttons = [];
 
         $lock = Emoji::Decode('\\ud83d\\udd12');
+        
+        $locked_times = $this->params['lock']['times'] ?? [];
 
         if($type == 'h'){
             for($e = $this->interval['start_hour']; $e <= $this->interval['end_hour']; $e += $this->delta_hour){
-                if(isset($this->params['lock']) and in_array($e.':'.$this->minute,$this->params['lock'])){
+                if(in_array($e.':'.$this->minute,$locked_times)){
                     $buttons[] = ['text'=>$lock,'callback_data'=>json_encode($default_callback)];
                 }else{
                     $buttons[] = ['text'=>$this->format($e),'callback_data'=>json_encode(['h' => $e, 'm' => $this->minute])];
@@ -240,7 +271,7 @@ class TimePickerFormField extends FormField{
                 $end = 59;
             }
             for($e = $start; $e <= $end; $e += $this->delta_minute){
-                if(isset($this->params['lock']) and in_array($this->hour.':'.$e,$this->params['lock'])){
+                if(in_array($this->hour.':'.$e,$locked_times)){
                     $buttons[] = ['text'=>$lock,'callback_data'=>json_encode($default_callback)];
                 }else{
                     $buttons[] = ['text'=>$this->format($e),'callback_data'=>json_encode(['h' => $this->hour, 'm' => $e])];
@@ -318,16 +349,16 @@ class TimePickerFormField extends FormField{
             'reply_markup' =>$this->telegramBotApi->makeInlineKeyboard($keyboard)
         ];
 
-        if(isset($this->telegramBotApi->update['callback_query'])){
-            $response = $this->telegramBotApi->editMessageText(
+        if((bool)$this->telegramBotApi->message){
+            $response = $this->telegramBotApi->sendMessage(
                 $this->telegramBotApi->chat_id,
-                $this->telegramBotApi->message_id,
                 $this->params['text'],
                 $options
             );
         }else{
-            $response = $this->telegramBotApi->sendMessage(
+            $response = $this->telegramBotApi->editMessageText(
                 $this->telegramBotApi->chat_id,
+                $this->telegramBotApi->message_id,
                 $this->params['text'],
                 $options
             );
