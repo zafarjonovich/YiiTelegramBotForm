@@ -18,11 +18,13 @@ class TelegramModel extends Model
     }
 
     public function getCurrentFormField(array $answers){
+
         foreach ($this->scenariosForForm()['formFields'] as $item){
             if(!isset($answers[$item['params']['name']])){
                 return $item;
             }
         }
+
         return [];
     }
 
@@ -32,15 +34,9 @@ class TelegramModel extends Model
             $value = floatval($value);
         }
 
-        $class_name = get_class($this);
-        $parts = explode('\\',$class_name);
-        $class_name = array_pop($parts);
-
-        $fields = [$class_name => [
+        $this->setAttributes([
             $currentFormFieldData['params']['name'] => $value
-        ]];
-
-        $this->load($fields);
+        ]);
 
         return $this->validate([$currentFormFieldData['params']['name']]);
     }

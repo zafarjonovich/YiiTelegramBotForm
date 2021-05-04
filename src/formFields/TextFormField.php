@@ -66,13 +66,18 @@ class TextFormField extends FormField{
             );
         }
 
+        $options = [];
+
+        if((isset($this->params['canGoToBack']) and $this->params['canGoToBack']) or !isset($this->params['canGoToBack'])){
+            $options['reply_markup'] = $this->telegramBotApi->makeCustomKeyboard([
+                [['text' => \Yii::t('app','Back')]]
+            ]);
+        }
+
         $response = $this->telegramBotApi->sendMessage(
             $this->telegramBotApi->chat_id,
-            $this->params['text'],[
-                'reply_markup' => $this->telegramBotApi->makeCustomKeyboard([
-                    [['text' => \Yii::t('app','Back')]]
-                ])
-        ]);
+            $this->params['text'],$options
+        );
 
         $cache->setValue('currentFormField.message_id',$response['result']['message_id']);
     }

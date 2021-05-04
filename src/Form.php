@@ -34,6 +34,7 @@ class Form{
     public function render(Cache $cache){
 
         $answers = $cache->getValue('answers',[]);
+        $this->form->setAttributes($answers);
 
         $scenario = $this->form->scenariosForForm();
 
@@ -52,6 +53,7 @@ class Form{
 
             if($formField->goBack()){
                 if(empty($answers)){
+                    $formField->afterOverAction();
                     $this->callback($scenario['fail']);
                 }else{
                     $cache->deleteLastFormFieldValue($scenario['formFields']);
@@ -63,11 +65,12 @@ class Form{
                 $formFieldValue = $formField->getFormFieldValue() and
                 $this->form->validateCurrentField($currentFormFieldData,$formFieldValue)
             ){
+
                 $cache->setValue('answers.'.$currentFormFieldData['params']['name'],$formFieldValue);
                 $new_answers = $cache->getValue('answers',[]);
 
                 if(empty($this->form->getCurrentFormField($new_answers))){
-                    $formField->afterFillAllFields();
+                    $formField->afterOverAction();
                     $this->callback($scenario['success'],$new_answers);
                 }else{
                     $this->render($cache);

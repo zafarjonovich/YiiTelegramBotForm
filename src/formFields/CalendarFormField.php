@@ -51,7 +51,18 @@ class CalendarFormField extends FormField{
         }
     }
 
-    public function afterFillAllFields(){
+    public function atHandling(Cache $cache)
+    {
+        if((bool)$this->telegramBotApi->message){
+            $this->telegramBotApi->deleteMessage(
+                $this->telegramBotApi->chat_id,
+                $response['result']['message_id']
+            );
+            unset($this->telegramBotApi->message);
+        }
+    }
+
+    public function afterOverAction(){
 
         if(isset($this->telegramBotApi->update['callback_query'])){
             $this->telegramBotApi->deleteMessage(
@@ -181,6 +192,10 @@ class CalendarFormField extends FormField{
 
         $next_callback = ['todate'=>date("Y-m",strtotime("First day of next month",strtotime("{$year}-{$month}")))];
         $keyboard[$row][] = ['text'=> Emoji::Decode("\\u27a1\\ufe0f"),'callback_data'=>json_encode($next_callback)];
+
+        if((isset($this->params['canGoToBack']) and $this->params['canGoToBack']) or !isset($this->params['canGoToBack'])){
+            $keyboard[][] = ['text'=> \Yii::t('app','Back'),'callback_data'=>json_encode(['go'=>'back'])];
+        }
 
         return $keyboard;
     }

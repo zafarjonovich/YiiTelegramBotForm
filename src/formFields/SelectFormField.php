@@ -17,7 +17,7 @@ class SelectFormField extends FormField{
             return $data and isset($data['go']) and $data['go'] == 'back';
         }
 
-        if(!$is_inline_keyboard and isset($this->telegramBotApi->update['message'])){
+        if(!$is_inline_keyboard and isset($this->telegramBotApi->update['message']['text'])){
             return $this->telegramBotApi->update['message']['text'] == \Yii::t('app','Back');
         }
 

@@ -30,6 +30,11 @@ class Cache
     }
 
     public function deleteLastFormFieldValue($formFields){
-        array_shift($this->content['answers']);
+        $count = count($this->content['answers']);
+
+        $key = $formFields[($count > 1?($count-1):0)]['params']['name'] ?? false;
+        if($key){
+            unset($this->content['answers'][$key]);
+        }
     }
 }
