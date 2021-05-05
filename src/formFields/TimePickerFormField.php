@@ -149,8 +149,6 @@ class TimePickerFormField extends FormField{
 
         $this->interval = $this->params['interval'] ?? [];
 
-        $locked_times = $this->params['lock']['times'] ?? [];
-
         if(isset($this->params['lock']['beforeNow']) and $this->params['lock']['beforeNow']){
 
             $locked_times = $this->params['lock']['times'] ?? [];
