@@ -8,7 +8,7 @@ use yii\helpers\ArrayHelper;
 
 class Cache
 {
-    private $content;
+    public $content;
 
     public function __construct(&$cache_content){
         $this->content = &$cache_content;
@@ -27,14 +27,5 @@ class Cache
 
     public function getValue($path = null,$default = null){
         return ArrayHelper::getValue($this->content,$path,$default);
-    }
-
-    public function deleteLastFormFieldValue($formFields){
-        $count = count($this->content['answers']);
-
-        $key = $formFields[($count > 1?($count-1):0)]['params']['name'] ?? false;
-        if($key){
-            unset($this->content['answers'][$key]);
-        }
     }
 }

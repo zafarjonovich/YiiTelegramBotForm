@@ -34,6 +34,12 @@ class Form{
     public function render(Cache $cache){
 
         $answers = $cache->getValue('answers',[]);
+        $currentFormFieldAttributes = $cache->getValue('currentFormField',['name'=>'','message_id'=>null,'params'=>[]]);
+
+
+        $this->form->setAttributes([
+            'params' => $currentFormFieldAttributes['params']
+        ]);
         $this->form->setAttributes($answers);
 
         $scenario = $this->form->scenariosForForm();
@@ -43,31 +49,47 @@ class Form{
         /** @var FormField $formField */
         $formField = new $currentFormFieldData['class']($currentFormFieldData['params'],$this->telegramBotApi);
 
-        $currentFormFieldKey = $cache->getValue('currentFormField',['name'=>'','message_id'=>null]);
-
         $formField->beforeHandling($cache);
 
-        if($currentFormFieldKey['name'] == $currentFormFieldData['params']['name']){
+        if($currentFormFieldAttributes['name'] == $currentFormFieldData['params']['name']){
 
             $formField->atHandling($cache);
 
             if($formField->goBack()){
+
+                $cache->setValue('currentFormField.params',[]);
+
                 if(empty($answers)){
                     $formField->afterOverAction();
                     $this->callback($scenario['fail']);
                 }else{
-                    $cache->deleteLastFormFieldValue($scenario['formFields']);
+                    $names = [];
+                    foreach ($scenario['formFields'] as $field){
+                        if(isset($answers[$field['params']['name']]))
+                            $names[] = $field['params']['name'];
+                    }
+                    $last_name = $names[(count($names)-1)];
+                    unset($answers[$last_name]);
+                    $cache->setValue('answers',$answers);
                     $this->render($cache);
                 }
                 return;
             }
+
             if(
                 $formFieldValue = $formField->getFormFieldValue() and
                 $this->form->validateCurrentField($currentFormFieldData,$formFieldValue)
             ){
 
-                $cache->setValue('answers.'.$currentFormFieldData['params']['name'],$formFieldValue);
                 $new_answers = $cache->getValue('answers',[]);
+                $new_answers[$currentFormFieldData['params']['name']] = $formFieldValue;
+
+                foreach ($new_answers as $key => $answer){
+                    $new_answers[$key] = $this->form->{$key};
+                }
+
+                $cache->setValue('currentFormField.params',[]);
+                $cache->setValue('answers',$new_answers);
 
                 if(empty($this->form->getCurrentFormField($new_answers))){
                     $formField->afterOverAction();
@@ -84,7 +106,9 @@ class Form{
             }
         }
 
-        $cache->setValue('currentFormField',['name'=>$currentFormFieldData['params']['name']]);
+        $cache->setValue('currentFormField.params',$this->form->params);
+        $cache->setValue('currentFormField.name',$currentFormFieldData['params']['name']);
+
         $formField->render($cache);
     }
 }

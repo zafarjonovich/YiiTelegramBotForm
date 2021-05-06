@@ -24,10 +24,6 @@ class SelectFormField extends FormField{
         return false;
     }
 
-    public function atHandling(Cache $cache){
-
-    }
-
     public function afterFillAllFields(){
         $is_inline_keyboard = $this->params['is_inline_keyboard'] ?? true;
 
@@ -51,7 +47,8 @@ class SelectFormField extends FormField{
             }
         }
 
-        if(!$is_inline_keyboard and isset($this->telegramBotApi->update['message'])){
+        if(!$is_inline_keyboard and isset($this->telegramBotApi->update['message']['text'])){
+
             foreach ($this->params['options'] as $option){
                 if($option[1] == $this->telegramBotApi->update['message']['text'])
                     return $option[0];

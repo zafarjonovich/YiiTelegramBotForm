@@ -7,6 +7,7 @@ use yii\base\Model;
 
 class TelegramModel extends Model
 {
+    public $params = [];
 
     public function scenariosForForm(){
         return [];
