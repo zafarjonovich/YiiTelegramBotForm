@@ -36,10 +36,8 @@ class Form{
         $answers = $cache->getValue('answers',[]);
         $currentFormFieldAttributes = $cache->getValue('currentFormField',['name'=>'','message_id'=>null,'params'=>[]]);
 
+        $this->form->params = $currentFormFieldAttributes['params'];
 
-        $this->form->setAttributes([
-            'params' => $currentFormFieldAttributes['params']
-        ]);
         $this->form->setAttributes($answers);
 
         $scenario = $this->form->scenariosForForm();
@@ -83,7 +81,6 @@ class Form{
 
                 $new_answers = $cache->getValue('answers',[]);
                 $new_answers[$currentFormFieldData['params']['name']] = $formFieldValue;
-
                 foreach ($new_answers as $key => $answer){
                     $new_answers[$key] = $this->form->{$key};
                 }
