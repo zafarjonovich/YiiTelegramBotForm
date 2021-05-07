@@ -32,9 +32,8 @@ class TelegramModel extends Model
     public function validateCurrentField($currentFormFieldData,$value){
 
         if(is_numeric($value)){
-            $value = floatval($value);
+            $value = (mb_strpos($value,'.') !== false)?floatval($value):intval($value);
         }
-
         $this->setAttributes([
             $currentFormFieldData['params']['name'] => $value
         ]);

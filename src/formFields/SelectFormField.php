@@ -78,11 +78,13 @@ class SelectFormField extends FormField{
             );
         }
 
-        $keyboard = [];
+        $buttons = [];
 
         foreach ($this->params['options'] as $option){
-            $keyboard[] = [['text' => $option[1],'callback_data'=>json_encode([$this->params['name'] => $option[0]])]];
+            $buttons[] = [json_encode([$this->params['name'] => $option[0]]),$option[1]];
         }
+
+        $keyboard = (new Keyboard())->createWithPattern($buttons,$this->params['keyboardPattern'] ?? 1)->get();
 
         if((isset($this->params['canGoToBack']) and $this->params['canGoToBack']) or !isset($this->params['canGoToBack'])){
             $keyboard[] = [['text' => \Yii::t('app','Back'),'callback_data'=>json_encode(['go' => 'back'])]];

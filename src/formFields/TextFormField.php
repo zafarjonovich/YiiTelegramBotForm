@@ -52,7 +52,9 @@ class TextFormField extends FormField{
             return false;
         }
 
-        return $this->telegramBotApi->update['message']['text'];
+        $value = $this->telegramBotApi->update['message']['text'];
+
+        return $this->params['pattern'][$value] ?? $value;
     }
 
     public function render(Cache $cache){
@@ -68,10 +70,16 @@ class TextFormField extends FormField{
 
         $options = [];
 
+        $keyboard = [];
+
+        if(isset($this->params['keyboard'])){
+            $keyboard = $this->params['keyboard'];
+        }
         if((isset($this->params['canGoToBack']) and $this->params['canGoToBack']) or !isset($this->params['canGoToBack'])){
-            $options['reply_markup'] = $this->telegramBotApi->makeCustomKeyboard([
-                [['text' => \Yii::t('app','Back')]]
-            ]);
+            $keyboard[] = [['text' => \Yii::t('app','Back')]];
+        }
+        if($keyboard){
+            $options['reply_markup'] = $this->telegramBotApi->makeCustomKeyboard($keyboard);
         }
 
         $response = $this->telegramBotApi->sendMessage(

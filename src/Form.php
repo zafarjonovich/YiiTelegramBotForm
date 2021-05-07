@@ -75,7 +75,7 @@ class Form{
             }
 
             if(
-                $formFieldValue = $formField->getFormFieldValue() and
+                (($formFieldValue = $formField->getFormFieldValue()) !== false) and
                 $this->form->validateCurrentField($currentFormFieldData,$formFieldValue)
             ){
 
