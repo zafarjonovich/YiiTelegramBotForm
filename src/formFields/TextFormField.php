@@ -43,7 +43,7 @@ class TextFormField extends FormField{
             ]
         );
 
-        $this->state['message_id'] = $response['result']['message_id']
+        $this->state['message_id'] = $response['result']['message_id'];
     }
 
     public function getFormFieldValue(){
