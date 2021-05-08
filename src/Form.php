@@ -20,8 +20,9 @@ class Form{
 
     private $callback;
 
-    public function __construct($callback,TelegramModel $form,BotApi $botApi){
+    public function __construct($callback,Cache $cache,TelegramModel $form,BotApi $botApi){
         $this->callback = $callback;
+        $this->cache = $cache;
         $this->telegramBotApi = $botApi;
         $this->form = $form;
     }
@@ -31,14 +32,17 @@ class Form{
         $callback($data['method'],array_merge($data['params'],$form_values));
     }
 
-    public function render(Cache $cache){
+    public function render(){
 
+        $cache = $this->cache;
+
+        $questionKey = $cache->getValue('questionKey','');
         $answers = $cache->getValue('answers',[]);
-        $currentFormFieldAttributes = $cache->getValue('currentFormField',['name'=>'','message_id'=>null,'params'=>[]]);
-
-        $this->form->params = $currentFormFieldAttributes['params'];
+        $formState = $cache->getValue('formState',[]);
+        $formFieldState = $cache->getValue('formFieldState',[]);
 
         $this->form->setAttributes($answers);
+        $this->form->state = $formState;
 
         $scenario = $this->form->scenariosForForm();
 
@@ -47,15 +51,17 @@ class Form{
         /** @var FormField $formField */
         $formField = new $currentFormFieldData['class']($currentFormFieldData['params'],$this->telegramBotApi);
 
-        $formField->beforeHandling($cache);
+        $formField->state = $formFieldState;
 
-        if($currentFormFieldAttributes['name'] == $currentFormFieldData['params']['name']){
+        $formField->beforeHandling();
 
-            $formField->atHandling($cache);
+        if($questionKey == $currentFormFieldData['params']['name']){
+
+            $formField->atHandling();
 
             if($formField->goBack()){
 
-                $cache->setValue('currentFormField.params',[]);
+                $cache->setValue('formState',[]);
 
                 if(empty($answers)){
                     $formField->afterOverAction();
@@ -79,33 +85,35 @@ class Form{
                 $this->form->validateCurrentField($currentFormFieldData,$formFieldValue)
             ){
 
-                $new_answers = $cache->getValue('answers',[]);
-                $new_answers[$currentFormFieldData['params']['name']] = $formFieldValue;
-                foreach ($new_answers as $key => $answer){
-                    $new_answers[$key] = $this->form->{$key};
+                $answers[$currentFormFieldData['params']['name']] = $formFieldValue;
+                foreach ($answers as $key => $answer){
+                    $answers[$key] = $this->form->{$key};
                 }
 
-                $cache->setValue('currentFormField.params',[]);
-                $cache->setValue('answers',$new_answers);
+                $cache->setValue('formState',[]);
+                $cache->setValue('answers',$answers);
 
-                if(empty($this->form->getCurrentFormField($new_answers))){
+                if(empty($this->form->getCurrentFormField($answers))){
                     $formField->afterOverAction();
-                    $this->callback($scenario['success'],$new_answers);
+                    $this->callback($scenario['success'],$answers);
                 }else{
                     $this->render($cache);
                 }
                 return;
             }else{
                 if($errors = $this->form->getErrors($currentFormFieldData['params']['name'])){
-                    $formField->showErrors($cache,$errors);
+                    $formField->showErrors($errors);
                     return;
                 }
             }
         }
 
-        $cache->setValue('currentFormField.params',$this->form->params);
-        $cache->setValue('currentFormField.name',$currentFormFieldData['params']['name']);
+        $formField->params = $this->form->getCurrentFormField($answers)['params'];
+        $formField->render();
 
-        $formField->render($cache);
+        $cache->setValue('questionKey',$currentFormFieldData['params']['name']);
+        $cache->setValue('formState',$this->form->state);
+        $cache->setValue('formFieldState',$formField->state);
+
     }
 }

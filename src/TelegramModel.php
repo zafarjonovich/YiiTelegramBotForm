@@ -7,7 +7,7 @@ use yii\base\Model;
 
 class TelegramModel extends Model
 {
-    public $params = [];
+    public $state = [];
 
     public function scenariosForForm(){
         return [];
@@ -34,9 +34,14 @@ class TelegramModel extends Model
         if(is_numeric($value)){
             $value = (mb_strpos($value,'.') !== false)?floatval($value):intval($value);
         }
+        /*
         $this->setAttributes([
             $currentFormFieldData['params']['name'] => $value
         ]);
+
+        var_dump($value);die;
+*/
+        $this->{$currentFormFieldData['params']['name']} = $value;
 
         return $this->validate([$currentFormFieldData['params']['name']]);
     }

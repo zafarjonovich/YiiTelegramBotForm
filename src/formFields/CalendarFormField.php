@@ -41,7 +41,7 @@ class CalendarFormField extends FormField{
         return false;
     }
 
-    public function beforeHandling(Cache $cache){
+    public function beforeHandling(){
 
         if(isset($this->telegramBotApi->update['callback_query'])){
             $data = json_decode($this->telegramBotApi->update['callback_query']['data'],true);
@@ -51,7 +51,7 @@ class CalendarFormField extends FormField{
         }
     }
 
-    public function atHandling(Cache $cache)
+    public function atHandling()
     {
         if((bool)$this->telegramBotApi->message){
             $this->telegramBotApi->deleteMessage(
@@ -200,7 +200,7 @@ class CalendarFormField extends FormField{
         return $keyboard;
     }
 
-    public function render(Cache $cache){
+    public function render(){
 
         $update = $this->telegramBotApi->update;
 
@@ -242,7 +242,7 @@ class CalendarFormField extends FormField{
         }
 
         if($response['ok']){
-            $cache->setValue('currentFormField.message_id',$response['result']['message_id']);
+            $this->state['message_id'] = $response['result']['message_id'];
         }
     }
 }

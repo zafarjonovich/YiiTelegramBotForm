@@ -11,18 +11,20 @@ class FormField
     /** @var BotApi\ $telegramBotApi*/
     protected $telegramBotApi;
 
-    protected $params;
+    public $params;
+
+    public $state = [];
 
     public function __construct($params,BotApi $telegramBotApi){
         $this->telegramBotApi = $telegramBotApi;
         $this->params = $params;
     }
 
-    public function atHandling(Cache $cache){
+    public function atHandling(){
 
     }
 
-    public function beforeHandling(Cache $cache){
+    public function beforeHandling(){
 
     }
 
@@ -30,7 +32,7 @@ class FormField
 
     }
 
-    public function showErrors($cache,$errors){
+    public function showErrors($errors){
 
     }
 
@@ -46,7 +48,7 @@ class FormField
         return false;
     }
 
-    public function render(Cache $cache){
+    public function render(){
         return false;
     }
 }

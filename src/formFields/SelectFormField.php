@@ -4,6 +4,7 @@
 namespace zafarjonovich\YiiTelegramBotForm\formFields;
 
 
+use zafarjonovich\Telegram\Keyboard;
 use zafarjonovich\YiiTelegramBotForm\Cache;
 use zafarjonovich\YiiTelegramBotForm\FormField;
 
@@ -24,7 +25,31 @@ class SelectFormField extends FormField{
         return false;
     }
 
+    public function beforeHandling()
+    {
+        $is_inline_keyboard = $this->params['is_inline_keyboard'] ?? true;
+
+        if($is_inline_keyboard and isset($this->telegramBotApi->update['message'])){
+            $this->telegramBotApi->deleteMessage(
+                $this->telegramBotApi->chat_id,
+                $this->telegramBotApi->message_id
+            );
+        }
+    }
+
     public function afterFillAllFields(){
+        $is_inline_keyboard = $this->params['is_inline_keyboard'] ?? true;
+
+        if($is_inline_keyboard and isset($this->telegramBotApi->update['callback_query'])){
+            $this->telegramBotApi->deleteMessage(
+                $this->telegramBotApi->chat_id,
+                $this->telegramBotApi->message_id
+            );
+        }
+    }
+
+    public function afterOverAction()
+    {
         $is_inline_keyboard = $this->params['is_inline_keyboard'] ?? true;
 
         if($is_inline_keyboard and isset($this->telegramBotApi->update['callback_query'])){
@@ -58,7 +83,7 @@ class SelectFormField extends FormField{
         return false;
     }
 
-    public function render(Cache $cache){
+    public function render(){
 
         $update = $this->telegramBotApi->update;
 
@@ -84,7 +109,7 @@ class SelectFormField extends FormField{
             $buttons[] = [json_encode([$this->params['name'] => $option[0]]),$option[1]];
         }
 
-        $keyboard = (new Keyboard())->createWithPattern($buttons,$this->params['keyboardPattern'] ?? 1)->get();
+        $keyboard = (new Keyboard())->createWithPattern($buttons,$this->params['keyboardPattern']??1)->get();
 
         if((isset($this->params['canGoToBack']) and $this->params['canGoToBack']) or !isset($this->params['canGoToBack'])){
             $keyboard[] = [['text' => \Yii::t('app','Back'),'callback_data'=>json_encode(['go' => 'back'])]];
@@ -109,6 +134,8 @@ class SelectFormField extends FormField{
             );
         }
 
-        $cache->setValue('currentFormField.message_id',$response['result']['message_id']);
+        if($response['ok']){
+            $this->state['message_id'] = $response['result']['message_id'];
+        }
     }
 }

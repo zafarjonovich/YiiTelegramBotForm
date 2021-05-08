@@ -63,7 +63,7 @@ class TimePickerFormField extends FormField{
         return false;
     }
 
-    public function atHandling(Cache $cache)
+    public function atHandling()
     {
         if((bool)$this->telegramBotApi->message){
             $this->telegramBotApi->deleteMessage(
@@ -74,7 +74,7 @@ class TimePickerFormField extends FormField{
         }
     }
 
-    public function beforeHandling(Cache $cache){
+    public function beforeHandling(){
 
         if(isset($this->telegramBotApi->callback_query['data']) and
             $data = json_decode($this->telegramBotApi->callback_query['data'],true)
@@ -310,7 +310,7 @@ class TimePickerFormField extends FormField{
         return (strlen($value) == 1)?'0'.$value:$value;
     }
 
-    public function render(Cache $cache){
+    public function render(){
 
         $type = $this->params['type'] ?? self::TYPE_TAPPER;
 
@@ -363,7 +363,7 @@ class TimePickerFormField extends FormField{
         }
 
         if($response['ok']){
-            $cache->setValue('currentFormField.message_id',$response['result']['message_id']);
+            $this->state['message_id'] = $response['result']['message_id'];
         }
 
     }

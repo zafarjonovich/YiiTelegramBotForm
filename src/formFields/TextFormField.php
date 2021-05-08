@@ -17,22 +17,22 @@ class TextFormField extends FormField{
         return false;
     }
 
-    public function atHandling(Cache $cache){
+    public function atHandling(){
         if(isset($this->params['delete_value_from_chat']) and $this->params['delete_value_from_chat']){
             $this->telegramBotApi->deleteMessage(
                 $this->telegramBotApi->chat_id,
                 $this->telegramBotApi->message_id
             );
-            if($message_id = $cache->getValue('currentFormField.message_id')){
+            if(isset($this->state['message_id'])){
                 $this->telegramBotApi->deleteMessage(
                     $this->telegramBotApi->chat_id,
-                    $message_id
+                    $this->state['message_id']
                 );
             }
         }
     }
 
-    public function showErrors($cache,$errors){
+    public function showErrors($errors){
         $text = implode(PHP_EOL.PHP_EOL,$errors);
 
         $response = $this->telegramBotApi->sendMessage(
@@ -43,7 +43,7 @@ class TextFormField extends FormField{
             ]
         );
 
-        $cache->setValue('currentFormField.message_id',$response['result']['message_id']);
+        $this->state['message_id'] = $response['result']['message_id']
     }
 
     public function getFormFieldValue(){
@@ -57,7 +57,7 @@ class TextFormField extends FormField{
         return $this->params['pattern'][$value] ?? $value;
     }
 
-    public function render(Cache $cache){
+    public function render(){
 
         $update = $this->telegramBotApi->update;
 
@@ -87,6 +87,8 @@ class TextFormField extends FormField{
             $this->params['text'],$options
         );
 
-        $cache->setValue('currentFormField.message_id',$response['result']['message_id']);
+        if($response['ok']){
+            $this->state['message_id'] = $response['result']['message_id'];
+        }
     }
 }
