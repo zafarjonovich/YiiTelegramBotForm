@@ -108,7 +108,14 @@ class Form{
             }
         }
 
-        $formField->params = $this->form->getCurrentFormField($answers)['params'];
+        $formFieldState = $formField->state;
+
+        $currentFormFieldData = $this->form->getCurrentFormField($answers);
+
+        /** @var FormField $formField */
+        $formField = new $currentFormFieldData['class']($currentFormFieldData['params'],$this->telegramBotApi);
+        $formField->state = $formFieldState;
+
         $formField->render();
 
         $cache->setValue('questionKey',$currentFormFieldData['params']['name']);
