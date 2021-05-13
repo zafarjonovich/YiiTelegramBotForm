@@ -25,6 +25,16 @@ class SelectFormField extends FormField{
         return false;
     }
 
+    public function atHandling()
+    {
+        $is_inline_keyboard = $this->params['is_inline_keyboard'] ?? true;
+
+        if($is_inline_keyboard and isset($this->telegramBotApi->update['message'])){
+            $this->telegramBotApi->deleteCurrentMessage();
+            $this->telegramBotApi->message = null;
+        }
+    }
+
     public function beforeHandling()
     {
         $is_inline_keyboard = $this->params['is_inline_keyboard'] ?? true;
@@ -119,16 +129,16 @@ class SelectFormField extends FormField{
             'reply_markup' => $is_inline_keyboard?$this->telegramBotApi->makeInlineKeyboard($keyboard):$this->telegramBotApi->makeCustomKeyboard($keyboard)
         ];
 
-        if(isset($update['callback_query'])){
-            $response = $this->telegramBotApi->editMessageText(
+        if($this->telegramBotApi->message){
+            $response = $this->telegramBotApi->sendMessage(
                 $this->telegramBotApi->chat_id,
-                $this->telegramBotApi->message_id,
                 $this->params['text'],
                 $options
             );
-        }else{
-            $response = $this->telegramBotApi->sendMessage(
+        }else if($this->telegramBotApi->callback_query){
+            $response = $this->telegramBotApi->editMessageText(
                 $this->telegramBotApi->chat_id,
+                $this->telegramBotApi->message_id,
                 $this->params['text'],
                 $options
             );
