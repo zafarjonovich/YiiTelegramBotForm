@@ -110,11 +110,13 @@ class Form{
 
         $formFieldState = $formField->state;
 
-        $currentFormFieldData = $this->form->getCurrentFormField($answers);
+        $newFormFieldData = $this->form->getCurrentFormField($answers);
 
-        /** @var FormField $formField */
-        $formField = new $currentFormFieldData['class']($currentFormFieldData['params'],$this->telegramBotApi);
-        $formField->state = $formFieldState;
+        if($currentFormFieldData['class'] != $newFormFieldData['class']){
+            /** @var FormField $formField */
+            $formField = new $currentFormFieldData['class']($newFormFieldData['params'],$this->telegramBotApi);
+            $formField->state = $formFieldState;
+        }
 
         $formField->render();
 

@@ -44,7 +44,9 @@ class CalendarFormField extends FormField{
     public function beforeHandling(){
 
         if(isset($this->telegramBotApi->update['callback_query'])){
+
             $data = json_decode($this->telegramBotApi->update['callback_query']['data'],true);
+
             if($data and isset($data['todate'])){
                 $this->date = $data['todate'];
             }
@@ -178,7 +180,7 @@ class CalendarFormField extends FormField{
             }
         }
 
-        if(count($keyboard[$row]) > 0){
+        if(isset($keyboard[$row]) and is_array($keyboard[$row]) and !empty($keyboard[$row])){
             $row++;
         }
 
