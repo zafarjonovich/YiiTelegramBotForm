@@ -112,6 +112,11 @@ class Form{
 
         $newFormFieldData = $this->form->getCurrentFormField($answers);
 
+        if($formField->params != $newFormFieldData['params'])
+        {
+            $formField->params = $newFormFieldData['params'];
+        }
+
         if($currentFormFieldData['class'] != $newFormFieldData['class']){
             /** @var FormField $formField */
             $formField = new $currentFormFieldData['class']($newFormFieldData['params'],$this->telegramBotApi);
