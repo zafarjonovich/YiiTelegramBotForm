@@ -119,7 +119,7 @@ class Form{
 
         if($currentFormFieldData['class'] != $newFormFieldData['class']){
             /** @var FormField $formField */
-            $formField = new $currentFormFieldData['class']($newFormFieldData['params'],$this->telegramBotApi);
+            $formField = new $newFormFieldData['class']($newFormFieldData['params'],$this->telegramBotApi);
             $formField->state = $formFieldState;
         }
 
