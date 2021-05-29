@@ -17,6 +17,14 @@ class TextFormField extends FormField{
         return false;
     }
 
+    public function goHome(){
+        if(isset($this->telegramBotApi->update['message']['text']) and
+            $this->telegramBotApi->update['message']['text'] == \Yii::t('app','Home')){
+            return true;
+        }
+        return false;
+    }
+
     public function atHandling(){
         if(isset($this->params['delete_value_from_chat']) and $this->params['delete_value_from_chat']){
             $this->telegramBotApi->deleteMessage(
@@ -75,9 +83,9 @@ class TextFormField extends FormField{
         if(isset($this->params['keyboard'])){
             $keyboard = $this->params['keyboard'];
         }
-        if((isset($this->params['canGoToBack']) and $this->params['canGoToBack']) or !isset($this->params['canGoToBack'])){
-            $keyboard[] = [['text' => \Yii::t('app','Back')]];
-        }
+
+        $keyboard = $this->createNavigatorButtons($keyboard);
+
         if($keyboard){
             $options['reply_markup'] = $this->telegramBotApi->makeCustomKeyboard($keyboard);
         }

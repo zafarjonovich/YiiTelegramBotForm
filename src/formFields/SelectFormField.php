@@ -25,6 +25,22 @@ class SelectFormField extends FormField{
         return false;
     }
 
+    public function goHome()
+    {
+        $is_inline_keyboard = $this->params['is_inline_keyboard'] ?? true;
+
+        if($is_inline_keyboard and isset($this->telegramBotApi->update['callback_query'])){
+            $data = json_decode($this->telegramBotApi->update['callback_query']['data'],true);
+            return $data and isset($data['go']) and $data['go'] == 'home';
+        }
+
+        if(!$is_inline_keyboard and isset($this->telegramBotApi->message['text'])){
+            return $this->telegramBotApi->message['text'] == \Yii::t('app','Home');
+        }
+
+        return false;
+    }
+
     public function atHandling()
     {
         $is_inline_keyboard = $this->params['is_inline_keyboard'] ?? true;
@@ -121,9 +137,7 @@ class SelectFormField extends FormField{
 
         $keyboard = (new Keyboard())->createWithPattern($buttons,$this->params['keyboardPattern']??1)->get();
 
-        if((isset($this->params['canGoToBack']) and $this->params['canGoToBack']) or !isset($this->params['canGoToBack'])){
-            $keyboard[] = [['text' => \Yii::t('app','Back'),'callback_data'=>json_encode(['go' => 'back'])]];
-        }
+        $keyboard = $this->createNavigatorButtons($keyboard);
 
         $options = [
             'reply_markup' => $is_inline_keyboard?$this->telegramBotApi->makeInlineKeyboard($keyboard):$this->telegramBotApi->makeCustomKeyboard($keyboard)

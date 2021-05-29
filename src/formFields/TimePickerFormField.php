@@ -51,6 +51,16 @@ class TimePickerFormField extends FormField{
         return false;
     }
 
+    public function goHome(){
+
+        if(isset($this->telegramBotApi->update['callback_query'])){
+            $data = json_decode($this->telegramBotApi->update['callback_query']['data'],true);
+            return $data and isset($data['go']) and $data['go'] == 'home';
+        }
+
+        return false;
+    }
+
     public function getFormFieldValue(){
 
         if(isset($this->telegramBotApi->callback_query['data']) and
@@ -233,9 +243,7 @@ class TimePickerFormField extends FormField{
 
         $keyboard = array_chunk($buttons,5);
 
-        if((isset($this->params['canGoToBack']) and $this->params['canGoToBack']) or !isset($this->params['canGoToBack'])){
-            $keyboard[] = [['text'=> \Yii::t('app','Back'),'callback_data'=>json_encode(['go'=>'back'])]];
-        }
+        $keyboard = $this->createNavigatorButtons($keyboard);
 
         return $keyboard;
     }
@@ -298,9 +306,7 @@ class TimePickerFormField extends FormField{
             [['text'=>$ok,'callback_data'=>json_encode(['a'=>self::format($hour).":".self::format($minute)])]],
         ];
 
-        if((isset($this->params['canGoToBack']) and $this->params['canGoToBack']) or !isset($this->params['canGoToBack'])){
-            $keyboard[] = [['text'=> \Yii::t('app','Back'),'callback_data'=>json_encode(['go'=>'back'])]];
-        }
+        $keyboard = $this->createNavigatorButtons($keyboard);
 
         return $keyboard;
     }

@@ -4,6 +4,7 @@
 namespace zafarjonovich\YiiTelegramBotForm;
 
 use zafarjonovich\Telegram\BotApi;
+use zafarjonovich\Telegram\Keyboard;
 
 class FormField
 {
@@ -14,6 +15,8 @@ class FormField
     public $params;
 
     public $state = [];
+
+    public $show_home_button = false;
 
     public function __construct($params,BotApi $telegramBotApi){
         $this->telegramBotApi = $telegramBotApi;
@@ -40,7 +43,7 @@ class FormField
         return false;
     }
 
-    public function isInlineMode(){
+    public function goHome(){
         return false;
     }
     
@@ -50,5 +53,18 @@ class FormField
 
     public function render(){
         return false;
+    }
+
+    public function createNavigatorButtons($keyboard)
+    {
+        $keyboard = new Keyboard($keyboard);
+        if((isset($this->params['canGoToBack']) and $this->params['canGoToBack']) or !isset($this->params['canGoToBack']))
+            $keyboard->addButton(\Yii::t('app','Back'),json_encode(['go'=>'back']));
+
+
+        if($this->show_home_button)
+            $keyboard->addButton(\Yii::t('app','Home'),json_encode(['go'=>'home']));
+
+        return $keyboard->get();
     }
 }

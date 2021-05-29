@@ -53,11 +53,20 @@ class Form{
 
         $formField->state = $formFieldState;
 
+        $formField->show_home_button = isset($scenario['home']);
+
         $formField->beforeHandling();
 
         if($questionKey == $currentFormFieldData['params']['name']){
 
             $formField->atHandling();
+
+            if($formField->goHome())
+            {
+                $formField->afterOverAction();
+                $this->callback($scenario['home']);
+                return;
+            }
 
             if($formField->goBack()){
 
@@ -121,6 +130,7 @@ class Form{
             /** @var FormField $formField */
             $formField = new $newFormFieldData['class']($newFormFieldData['params'],$this->telegramBotApi);
             $formField->state = $formFieldState;
+            $formField->show_home_button = isset($scenario['home']);
         }
 
         $formField->render();

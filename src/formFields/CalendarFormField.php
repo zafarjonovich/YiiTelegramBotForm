@@ -41,6 +41,16 @@ class CalendarFormField extends FormField{
         return false;
     }
 
+    public function goHome()
+    {
+        if(isset($this->telegramBotApi->update['callback_query'])){
+            $data = json_decode($this->telegramBotApi->update['callback_query']['data'],true);
+            return $data and isset($data['go']) and $data['go'] == 'home';
+        }
+
+        return false;
+    }
+
     public function beforeHandling(){
 
         if(isset($this->telegramBotApi->update['callback_query'])){
@@ -195,9 +205,7 @@ class CalendarFormField extends FormField{
         $next_callback = ['todate'=>date("Y-m",strtotime("First day of next month",strtotime("{$year}-{$month}")))];
         $keyboard[$row][] = ['text'=> Emoji::Decode("\\u27a1\\ufe0f"),'callback_data'=>json_encode($next_callback)];
 
-        if((isset($this->params['canGoToBack']) and $this->params['canGoToBack']) or !isset($this->params['canGoToBack'])){
-            $keyboard[][] = ['text'=> \Yii::t('app','Back'),'callback_data'=>json_encode(['go'=>'back'])];
-        }
+        $keyboard = $this->createNavigatorButtons($keyboard);
 
         return $keyboard;
     }
