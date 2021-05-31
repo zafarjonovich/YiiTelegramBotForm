@@ -43,6 +43,16 @@ class SelectFormField extends FormField{
 
     public function atHandling()
     {
+        if(isset($this->params['clearChat'])){
+            $this->telegramBotApi->deleteCurrentMessage();
+
+            if(isset($this->state['message_id']))
+                $this->telegramBotApi->deleteMessage(
+                    $this->telegramBotApi->chat_id,
+                    $this->state['message_id']
+                );
+        }
+
         $is_inline_keyboard = $this->params['is_inline_keyboard'] ?? true;
 
         if($is_inline_keyboard and isset($this->telegramBotApi->update['message'])){
