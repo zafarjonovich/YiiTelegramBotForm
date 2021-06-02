@@ -95,7 +95,7 @@ class TextFormField extends FormField{
             $this->params['text'],$options
         );
 
-        if($response['ok']){
+        if(isset($response['ok']) and $response['ok']){
             $this->state['message_id'] = $response['result']['message_id'];
         }
     }

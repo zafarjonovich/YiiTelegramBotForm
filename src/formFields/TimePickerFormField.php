@@ -368,7 +368,7 @@ class TimePickerFormField extends FormField{
             );
         }
 
-        if($response['ok']){
+        if(isset($response['ok']) and $response['ok']){
             $this->state['message_id'] = $response['result']['message_id'];
         }
 
