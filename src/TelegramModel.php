@@ -9,6 +9,8 @@ class TelegramModel extends Model
 {
     public $state = [];
 
+    public $hiddenInputs = [];
+
     public function scenariosForForm(){
         return [];
     }
@@ -34,13 +36,7 @@ class TelegramModel extends Model
         if(is_numeric($value)){
             $value = (mb_strpos($value,'.') !== false)?floatval($value):intval($value);
         }
-        /*
-        $this->setAttributes([
-            $currentFormFieldData['params']['name'] => $value
-        ]);
 
-        var_dump($value);die;
-*/
         $this->{$currentFormFieldData['params']['name']} = $value;
 
         return $this->validate([$currentFormFieldData['params']['name']]);

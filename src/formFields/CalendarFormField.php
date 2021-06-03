@@ -4,6 +4,7 @@
 namespace zafarjonovich\YiiTelegramBotForm\formFields;
 
 
+use zafarjonovich\Telegram\BotApi;
 use zafarjonovich\Telegram\Emoji;
 use zafarjonovich\YiiTelegramBotForm\Cache;
 use zafarjonovich\YiiTelegramBotForm\FormField;
@@ -30,6 +31,19 @@ class CalendarFormField extends FormField{
     private $lock = false;
 
     private $date = 'now';
+
+    public function __construct($params, BotApi $telegramBotApi)
+    {
+        parent::__construct($params, $telegramBotApi);
+
+        if(isset($params['months'])){
+            $this->months = $params['months'];
+        }
+
+        if(isset($params['days'])){
+            $this->days = $params['days'];
+        }
+    }
 
     public function goBack(){
 
