@@ -52,7 +52,7 @@ class Form{
 
         $scenario = $this->form->scenariosForForm();
 
-        $currentFormFieldData = $this->form->getCurrentFormField($answers);
+        $currentFormFieldData = $bCurrentFormFieldData = $this->form->getCurrentFormField($answers);
 
         $currentFormFieldData = array_merge($currentFormFieldData,[
             'telegramBotApi' => $this->telegramBotApi,
@@ -132,7 +132,7 @@ class Form{
 
         $newFormFieldData = $this->form->getCurrentFormField($answers);
 
-        if($currentFormFieldData != $newFormFieldData)
+        if($bCurrentFormFieldData != $newFormFieldData)
         {
             $newFormFieldData = array_merge($newFormFieldData,[
                 'telegramBotApi' => $this->telegramBotApi,

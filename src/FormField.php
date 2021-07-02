@@ -23,6 +23,8 @@ class FormField extends BaseObject
 
     public $buttonTextHome = 'Home';
 
+    public $isInlineKeyboard = false;
+
     public $clearChat = false;
 
     public $keyboard = [];
@@ -73,6 +75,6 @@ class FormField extends BaseObject
         if($this->canGoToHome)
             $keyboard->addCallbackDataButton($this->buttonTextHome,json_encode(['go'=>'home']));
 
-        return $keyboard->initCustomKeyboard();
+        return $this->isInlineKeyboard?$keyboard->initInlineKeyboard():$keyboard->initCustomKeyboard();
     }
 }

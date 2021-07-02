@@ -69,7 +69,9 @@ class SelectFormField extends FormField{
 
     public function beforeHandling()
     {
-        if($this->isInlineKeyboard and isset($this->telegramBotApi->update['message'])){
+        $update = $this->telegramBotApi->update;
+
+        if(!($this->isInlineKeyboard and $update->isCallbackQuery())){
             $this->telegramBotApi->deleteMessage(
                 $this->telegramBotApi->chat_id,
                 $this->telegramBotApi->message_id
@@ -147,7 +149,7 @@ class SelectFormField extends FormField{
         foreach ($this->options as $option) {
             foreach ($option as $item) {
                 if($this->isInlineKeyboard){
-                    $keyboard->addCallbackDataButton($item[1],json_encode([$this->name => $option[0]]));
+                    $keyboard->addCallbackDataButton($item[1],json_encode([$this->name => $item[0]]));
                 }else{
                     $keyboard->addCustomButton($item[1]);
                 }
