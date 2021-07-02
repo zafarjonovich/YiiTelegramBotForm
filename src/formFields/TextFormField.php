@@ -4,29 +4,46 @@
 namespace zafarjonovich\YiiTelegramBotForm\formFields;
 
 
+use zafarjonovich\Telegram\update\objects\Response;
+use zafarjonovich\Telegram\update\Update;
 use zafarjonovich\YiiTelegramBotForm\Cache;
 use zafarjonovich\YiiTelegramBotForm\FormField;
 
 class TextFormField extends FormField{
 
     public function goBack(){
-        if(isset($this->telegramBotApi->update['message']['text']) and
-            $this->telegramBotApi->update['message']['text'] == \Yii::t('app','Back')){
+        /** @var Update $update */
+        $update = $this->telegramBotApi->update;
+
+        if(
+            $update->isMessage() and
+            $update->getMessage()->isText() and
+            $update->getMessage()->getText() == $this->buttonTextBack
+        ){
             return true;
         }
+
         return false;
     }
 
     public function goHome(){
-        if(isset($this->telegramBotApi->update['message']['text']) and
-            $this->telegramBotApi->update['message']['text'] == \Yii::t('app','Home')){
+        /** @var Update $update */
+        $update = $this->telegramBotApi->update;
+
+        if(
+            $update->isMessage() and
+            $update->getMessage()->isText() and
+            $update->getMessage()->getText() == $this->buttonTextHome
+        ){
             return true;
         }
+
         return false;
     }
 
     public function atHandling(){
-        if(isset($this->params['delete_value_from_chat']) and $this->params['delete_value_from_chat']){
+
+        if($this->clearChat){
             $this->telegramBotApi->deleteMessage(
                 $this->telegramBotApi->chat_id,
                 $this->telegramBotApi->message_id
@@ -55,21 +72,24 @@ class TextFormField extends FormField{
     }
 
     public function getFormFieldValue(){
+        /** @var Update $update */
+        $update = $this->telegramBotApi->update;
 
-        if(!isset($this->telegramBotApi->update['message']['text'])){
+        if(!($update->isMessage() and $update->getMessage()->isText())){
             return false;
         }
 
-        $value = $this->telegramBotApi->update['message']['text'];
+        $value = $update->getMessage()->getText();
 
-        return $this->params['pattern'][$value] ?? $value;
+        return $value;
     }
 
     public function render(){
 
+        /** @var Update $update */
         $update = $this->telegramBotApi->update;
 
-        if(isset($update['callback_query'])){
+        if($update->isCallbackQuery()){
             $this->telegramBotApi->deleteMessage(
                 $this->telegramBotApi->chat_id,
                 $this->telegramBotApi->message_id
@@ -78,25 +98,21 @@ class TextFormField extends FormField{
 
         $options = [];
 
-        $keyboard = [];
+        $keyboard = $this->createNavigatorButtons($this->keyboard);
 
-        if(isset($this->params['keyboard'])){
-            $keyboard = $this->params['keyboard'];
-        }
-
-        $keyboard = $this->createNavigatorButtons($keyboard);
-
-        if($keyboard){
-            $options['reply_markup'] = $this->telegramBotApi->makeCustomKeyboard($keyboard);
+        if(!empty($keyboard)){
+            $options['reply_markup'] = $keyboard;
         }
 
         $response = $this->telegramBotApi->sendMessage(
             $this->telegramBotApi->chat_id,
-            $this->params['text'],$options
+            $this->text,$options
         );
 
-        if(isset($response['ok']) and $response['ok']){
-            $this->state['message_id'] = $response['result']['message_id'];
+        $response = new Response($response);
+
+        if($response->ok()){
+            $this->state['message_id'] = $response->getResult()->getMessageId();
         }
     }
 }

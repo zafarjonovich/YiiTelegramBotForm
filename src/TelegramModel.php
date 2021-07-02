@@ -11,6 +11,10 @@ class TelegramModel extends Model
 
     public $hiddenInputs = [];
 
+    public $buttonTextBack = 'Back';
+
+    public $buttonTextHome = 'Home';
+
     public function scenariosForForm(){
         return [];
     }
@@ -23,7 +27,7 @@ class TelegramModel extends Model
     public function getCurrentFormField(array $answers){
 
         foreach ($this->scenariosForForm()['formFields'] as $item){
-            if(!isset($answers[$item['params']['name']])){
+            if(!isset($answers[$item['name']])){
                 return $item;
             }
         }
@@ -32,14 +36,9 @@ class TelegramModel extends Model
     }
 
     public function validateCurrentField($currentFormFieldData,$value){
+        $this->{$currentFormFieldData['name']} = $value;
 
-        if(is_numeric($value)){
-            $value = (mb_strpos($value,'.') !== false)?floatval($value):intval($value);
-        }
-
-        $this->{$currentFormFieldData['params']['name']} = $value;
-
-        return $this->validate([$currentFormFieldData['params']['name']]);
+        return $this->validate([$currentFormFieldData['name']]);
     }
 
 }

@@ -10,16 +10,22 @@ use zafarjonovich\YiiTelegramBotForm\FormField;
 
 class SelectFormField extends FormField{
 
-    public function goBack(){
-        $is_inline_keyboard = $this->params['is_inline_keyboard'] ?? true;
+    public $isInlineKeyboard = false;
 
-        if($is_inline_keyboard and isset($this->telegramBotApi->update['callback_query'])){
-            $data = json_decode($this->telegramBotApi->update['callback_query']['data'],true);
+    public $options = [];
+    
+    
+    public function goBack(){
+
+        $update = $this->telegramBotApi->update;
+        
+        if($this->isInlineKeyboard and $update->isCallbackQuery()){
+            $data = json_decode($update->getCallbackQuery()->getData(),true);
             return $data and isset($data['go']) and $data['go'] == 'back';
         }
 
-        if(!$is_inline_keyboard and isset($this->telegramBotApi->update['message']['text'])){
-            return $this->telegramBotApi->update['message']['text'] == \Yii::t('app','Back');
+        if(!$this->isInlineKeyboard and $update->isMessage()){
+            return $update->getMessage()->getText() == \Yii::t('app','Back');
         }
 
         return false;
@@ -27,15 +33,15 @@ class SelectFormField extends FormField{
 
     public function goHome()
     {
-        $is_inline_keyboard = $this->params['is_inline_keyboard'] ?? true;
+        $update = $this->telegramBotApi->update;
 
-        if($is_inline_keyboard and isset($this->telegramBotApi->update['callback_query'])){
-            $data = json_decode($this->telegramBotApi->update['callback_query']['data'],true);
+        if($this->isInlineKeyboard and $update->isCallbackQuery()){
+            $data = json_decode($update->getCallbackQuery()->getData(),true);
             return $data and isset($data['go']) and $data['go'] == 'home';
         }
 
-        if(!$is_inline_keyboard and isset($this->telegramBotApi->message['text'])){
-            return $this->telegramBotApi->message['text'] == \Yii::t('app','Home');
+        if(!$this->isInlineKeyboard and $update->isMessage()){
+            return $update->getMessage()->getText() == \Yii::t('app','Home');
         }
 
         return false;
@@ -43,7 +49,7 @@ class SelectFormField extends FormField{
 
     public function atHandling()
     {
-        if(isset($this->params['clearChat'])){
+        if($this->clearChat){
             $this->telegramBotApi->deleteCurrentMessage();
 
             if(isset($this->state['message_id']))
@@ -53,9 +59,9 @@ class SelectFormField extends FormField{
                 );
         }
 
-        $is_inline_keyboard = $this->params['is_inline_keyboard'] ?? true;
+        $update = $this->telegramBotApi->update;
 
-        if($is_inline_keyboard and isset($this->telegramBotApi->update['message'])){
+        if($this->isInlineKeyboard and $update->isMessage()){
             $this->telegramBotApi->deleteCurrentMessage();
             $this->telegramBotApi->message = null;
         }
@@ -63,9 +69,7 @@ class SelectFormField extends FormField{
 
     public function beforeHandling()
     {
-        $is_inline_keyboard = $this->params['is_inline_keyboard'] ?? true;
-
-        if($is_inline_keyboard and isset($this->telegramBotApi->update['message'])){
+        if($this->isInlineKeyboard and isset($this->telegramBotApi->update['message'])){
             $this->telegramBotApi->deleteMessage(
                 $this->telegramBotApi->chat_id,
                 $this->telegramBotApi->message_id
@@ -74,9 +78,8 @@ class SelectFormField extends FormField{
     }
 
     public function afterFillAllFields(){
-        $is_inline_keyboard = $this->params['is_inline_keyboard'] ?? true;
-
-        if($is_inline_keyboard and isset($this->telegramBotApi->update['callback_query'])){
+        $update = $this->telegramBotApi->update;
+        if($this->isInlineKeyboard and $update->isCallbackQuery()){
             $this->telegramBotApi->deleteMessage(
                 $this->telegramBotApi->chat_id,
                 $this->telegramBotApi->message_id
@@ -86,9 +89,8 @@ class SelectFormField extends FormField{
 
     public function afterOverAction()
     {
-        $is_inline_keyboard = $this->params['is_inline_keyboard'] ?? true;
-
-        if($is_inline_keyboard and isset($this->telegramBotApi->update['callback_query'])){
+        $update = $this->telegramBotApi->update;
+        if($this->isInlineKeyboard and $update->isCallbackQuery()){
             $this->telegramBotApi->deleteMessage(
                 $this->telegramBotApi->chat_id,
                 $this->telegramBotApi->message_id
@@ -97,23 +99,26 @@ class SelectFormField extends FormField{
     }
 
     public function getFormFieldValue(){
+        $update = $this->telegramBotApi->update;
+        if($this->isInlineKeyboard and $update->isCallbackQuery()){
+            $data = json_decode($update->getCallbackQuery()->getData(),true);
 
-        $is_inline_keyboard = $this->params['is_inline_keyboard'] ?? true;
-
-        if($is_inline_keyboard and isset($this->telegramBotApi->update['callback_query'])){
-            $data = json_decode($this->telegramBotApi->update['callback_query']['data'],true);
-
-            if($data and isset($data[$this->params['name']])){
-                return $data[$this->params['name']];
+            if($data and isset($data[$this->name])){
+                return $data[$this->name];
             }
         }
 
-        if(!$is_inline_keyboard and isset($this->telegramBotApi->update['message']['text'])){
+        if(!$this->isInlineKeyboard and $update->isMessage()){
 
-            foreach ($this->params['options'] as $option){
-                if($option[1] == $this->telegramBotApi->update['message']['text'])
-                    return $option[0];
+            $calls = [];
+
+            foreach ($this->options as $option) {
+                foreach ($option as $item) {
+                    $calls[$item[1]] = $item[0];
+                }
             }
+
+            return isset($calls[$update->getMessage()->getText()])?$calls[$update->getMessage()->getText()]:false;
         }
 
         return false;
@@ -123,9 +128,7 @@ class SelectFormField extends FormField{
 
         $update = $this->telegramBotApi->update;
 
-        $is_inline_keyboard = $this->params['is_inline_keyboard'] ?? true;
-
-        if((bool)$this->telegramBotApi->message and $is_inline_keyboard){
+        if($update->isMessage() and $this->isInlineKeyboard){
             $response = $this->telegramBotApi->sendMessage(
                 $this->telegramBotApi->chat_id,
                 '~',
@@ -139,31 +142,34 @@ class SelectFormField extends FormField{
             );
         }
 
-        $buttons = [];
+        $keyboard = new Keyboard();
 
-        foreach ($this->params['options'] as $option){
-            $buttons[] = [json_encode([$this->params['name'] => $option[0]]),$option[1]];
+        foreach ($this->options as $option) {
+            foreach ($option as $item) {
+                if($this->isInlineKeyboard){
+                    $keyboard->addCallbackDataButton($item[1],json_encode([$this->name => $option[0]]));
+                }else{
+                    $keyboard->addCustomButton($item[1]);
+                }
+            }
+            $keyboard->newRow();
         }
 
-        $keyboard = (new Keyboard())->createWithPattern($buttons,$this->params['keyboardPattern']??1)->get();
-
-        $keyboard = $this->createNavigatorButtons($keyboard);
-
         $options = [
-            'reply_markup' => $is_inline_keyboard?$this->telegramBotApi->makeInlineKeyboard($keyboard):$this->telegramBotApi->makeCustomKeyboard($keyboard)
+            'reply_markup' => $this->isInlineKeyboard?$keyboard->initInlineKeyboard():$keyboard->initCustomKeyboard()
         ];
 
         if($this->telegramBotApi->message){
             $response = $this->telegramBotApi->sendMessage(
                 $this->telegramBotApi->chat_id,
-                $this->params['text'],
+                $this->text,
                 $options
             );
         }else if($this->telegramBotApi->callback_query){
             $response = $this->telegramBotApi->editMessageText(
                 $this->telegramBotApi->chat_id,
                 $this->telegramBotApi->message_id,
-                $this->params['text'],
+                $this->text,
                 $options
             );
         }

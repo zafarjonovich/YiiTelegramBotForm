@@ -3,25 +3,33 @@
 
 namespace zafarjonovich\YiiTelegramBotForm;
 
+use yii\base\BaseObject;
 use zafarjonovich\Telegram\BotApi;
 use zafarjonovich\Telegram\Keyboard;
 
-class FormField
+class FormField extends BaseObject
 {
 
-    /** @var BotApi\ $telegramBotApi*/
-    protected $telegramBotApi;
-
-    public $params;
+    /** @var BotApi $telegramBotApi*/
+    public $telegramBotApi;
 
     public $state = [];
 
-    public $show_home_button = false;
+    public $canGoToHome = false;
 
-    public function __construct($params,BotApi $telegramBotApi){
-        $this->telegramBotApi = $telegramBotApi;
-        $this->params = $params;
-    }
+    public $canGoToBack = true;
+
+    public $buttonTextBack = 'Back';
+
+    public $buttonTextHome = 'Home';
+
+    public $clearChat = false;
+
+    public $keyboard = [];
+
+    public $name;
+
+    public $text;
 
     public function atHandling(){
 
@@ -58,13 +66,13 @@ class FormField
     public function createNavigatorButtons($keyboard)
     {
         $keyboard = new Keyboard($keyboard);
-        if((isset($this->params['canGoToBack']) and $this->params['canGoToBack']) or !isset($this->params['canGoToBack']))
-            $keyboard->addButton(\Yii::t('app','Back'),json_encode(['go'=>'back']));
 
+        if($this->canGoToBack)
+            $keyboard->addCallbackDataButton($this->buttonTextBack,json_encode(['go'=>'back']));
 
-        if($this->show_home_button)
-            $keyboard->addButton(\Yii::t('app','Home'),json_encode(['go'=>'home']));
+        if($this->canGoToHome)
+            $keyboard->addCallbackDataButton($this->buttonTextHome,json_encode(['go'=>'home']));
 
-        return $keyboard->get();
+        return $keyboard->initCustomKeyboard();
     }
 }

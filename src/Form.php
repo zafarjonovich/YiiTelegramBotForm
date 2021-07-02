@@ -4,6 +4,7 @@
 namespace zafarjonovich\YiiTelegramBotForm;
 
 use zafarjonovich\Telegram\BotApi;
+use zafarjonovich\Telegram\update\Update;
 use zafarjonovich\YiiTelegramBotForm\Cache;
 
 
@@ -23,6 +24,11 @@ class Form{
     public function __construct($callback,Cache $cache,TelegramModel $form,BotApi $botApi){
         $this->callback = $callback;
         $this->cache = $cache;
+
+        if(is_array($botApi->update)){
+            $botApi->update = new Update($botApi->update);
+        }
+
         $this->telegramBotApi = $botApi;
         $this->form = $form;
     }
@@ -48,16 +54,20 @@ class Form{
 
         $currentFormFieldData = $this->form->getCurrentFormField($answers);
 
+        $currentFormFieldData = array_merge($currentFormFieldData,[
+            'telegramBotApi' => $this->telegramBotApi,
+            'state' => $formFieldState,
+            'canGoToHome' => isset($scenario['home']),
+            'buttonTextBack' => $this->form->buttonTextBack,
+            'buttonTextHome' => $this->form->buttonTextHome,
+        ]);
+
         /** @var FormField $formField */
-        $formField = new $currentFormFieldData['class']($currentFormFieldData['params'],$this->telegramBotApi);
-
-        $formField->state = $formFieldState;
-
-        $formField->show_home_button = isset($scenario['home']);
+        $formField = \Yii::createObject($currentFormFieldData);
 
         $formField->beforeHandling();
 
-        if($questionKey == $currentFormFieldData['params']['name']){
+        if($questionKey == $currentFormFieldData['name']){
 
             $formField->atHandling();
 
@@ -78,8 +88,8 @@ class Form{
                 }else{
                     $names = [];
                     foreach ($scenario['formFields'] as $field){
-                        if(isset($answers[$field['params']['name']]))
-                            $names[] = $field['params']['name'];
+                        if(isset($answers[$field['name']]))
+                            $names[] = $field['name'];
                     }
                     $last_name = $names[(count($names)-1)];
                     unset($answers[$last_name]);
@@ -94,7 +104,7 @@ class Form{
                 $this->form->validateCurrentField($currentFormFieldData,$formFieldValue)
             ){
 
-                $answers[$currentFormFieldData['params']['name']] = $formFieldValue;
+                $answers[$currentFormFieldData['name']] = $formFieldValue;
                 foreach ($answers as $key => $answer){
                     $answers[$key] = $this->form->{$key};
                 }
@@ -111,7 +121,7 @@ class Form{
                 }
                 return;
             }else{
-                if($errors = $this->form->getErrors($currentFormFieldData['params']['name'])){
+                if($errors = $this->form->getErrors($currentFormFieldData['name'])){
                     $formField->showErrors($errors);
                     return;
                 }
@@ -122,21 +132,23 @@ class Form{
 
         $newFormFieldData = $this->form->getCurrentFormField($answers);
 
-        if($formField->params != $newFormFieldData['params'])
+        if($currentFormFieldData != $newFormFieldData)
         {
-            $formField->params = $newFormFieldData['params'];
-        }
+            $newFormFieldData = array_merge($newFormFieldData,[
+                'telegramBotApi' => $this->telegramBotApi,
+                'state' => $formFieldState,
+                'canGoToHome' => isset($scenario['home']),
+                'buttonTextBack' => $this->form->buttonTextBack,
+                'buttonTextHome' => $this->form->buttonTextHome,
+            ]);
 
-        if($currentFormFieldData['class'] != $newFormFieldData['class']){
             /** @var FormField $formField */
-            $formField = new $newFormFieldData['class']($newFormFieldData['params'],$this->telegramBotApi);
-            $formField->state = $formFieldState;
-            $formField->show_home_button = isset($scenario['home']);
+            $formField = \Yii::createObject($newFormFieldData);
         }
 
         $formField->render();
 
-        $cache->setValue('questionKey',$currentFormFieldData['params']['name']);
+        $cache->setValue('questionKey',$currentFormFieldData['name']);
         $cache->setValue('formState',$this->form->state);
         $cache->setValue('formFieldState',$formField->state);
 
