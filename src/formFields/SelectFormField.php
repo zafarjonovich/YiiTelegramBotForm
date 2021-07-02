@@ -5,6 +5,7 @@ namespace zafarjonovich\YiiTelegramBotForm\formFields;
 
 
 use zafarjonovich\Telegram\Keyboard;
+use zafarjonovich\Telegram\update\objects\Response;
 use zafarjonovich\YiiTelegramBotForm\Cache;
 use zafarjonovich\YiiTelegramBotForm\FormField;
 
@@ -138,10 +139,14 @@ class SelectFormField extends FormField{
                     'reply_markup' => $this->telegramBotApi->removeCustomKeyboard()
                 ]
             );
-            $this->telegramBotApi->deleteMessage(
-                $this->telegramBotApi->chat_id,
-                $response['result']['message_id']
-            );
+            $response = new Response($response);
+
+            if($response->ok()){
+                $this->telegramBotApi->deleteMessage(
+                    $this->telegramBotApi->chat_id,
+                    $response->getResult()->getMessageId()
+                );
+            }
         }
 
         $keyboard = new Keyboard();
