@@ -72,7 +72,7 @@ class SelectFormField extends FormField{
     {
         $update = $this->telegramBotApi->update;
 
-        if($this->isInlineKeyboard and !$update->isCallbackQuery()){
+        if(!$this->isInlineKeyboard and $update->isCallbackQuery()){
             $this->telegramBotApi->deleteMessage(
                 $this->telegramBotApi->chat_id,
                 $this->telegramBotApi->message_id
@@ -166,7 +166,7 @@ class SelectFormField extends FormField{
             'reply_markup' => $this->isInlineKeyboard?$keyboard->initInlineKeyboard():$keyboard->initCustomKeyboard()
         ];
 
-        if($update->isMessage()){
+        if($update->isMessage() || ($update->isCallbackQuery() && !$this->isInlineKeyboard)){
             $response = $this->telegramBotApi->sendMessage(
                 $this->telegramBotApi->chat_id,
                 $this->text,
