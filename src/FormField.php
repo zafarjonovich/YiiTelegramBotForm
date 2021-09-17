@@ -69,12 +69,22 @@ class FormField extends BaseObject
     {
         $keyboard = new Keyboard($keyboard);
 
-        if($this->canGoToBack)
-            $keyboard->addCallbackDataButton($this->buttonTextBack,json_encode(['go'=>'back']));
+        if($this->isInlineKeyboard){
+            if($this->canGoToBack)
+                $keyboard->addCallbackDataButton($this->buttonTextBack,json_encode(['go'=>'back']));
 
-        if($this->canGoToHome)
-            $keyboard->addCallbackDataButton($this->buttonTextHome,json_encode(['go'=>'home']));
+            if($this->canGoToHome)
+                $keyboard->addCallbackDataButton($this->buttonTextHome,json_encode(['go'=>'home']));
 
-        return $this->isInlineKeyboard?$keyboard->initInlineKeyboard():$keyboard->initCustomKeyboard();
+            return $keyboard->initInlineKeyboard();
+        }else{
+            if($this->canGoToBack)
+                $keyboard->addCustomButton($this->buttonTextBack);
+
+            if($this->canGoToHome)
+                $keyboard->addCustomButton($this->buttonTextHome);
+
+            return $keyboard->initCustomKeyboard();
+        }
     }
 }

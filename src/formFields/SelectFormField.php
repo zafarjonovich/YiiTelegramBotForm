@@ -9,13 +9,10 @@ use zafarjonovich\Telegram\update\objects\Response;
 use zafarjonovich\YiiTelegramBotForm\Cache;
 use zafarjonovich\YiiTelegramBotForm\FormField;
 
-class SelectFormField extends FormField{
-
-    public $isInlineKeyboard = false;
-
+class SelectFormField extends FormField
+{
     public $options = [];
-    
-    
+
     public function goBack(){
 
         $update = $this->telegramBotApi->update;
@@ -50,21 +47,32 @@ class SelectFormField extends FormField{
 
     public function atHandling()
     {
-        if($this->clearChat){
+        $update = $this->telegramBotApi->update;
+
+        if(($this->clearChat || $this->isInlineKeyboard) && $update->isMessage()) {
             $this->telegramBotApi->deleteCurrentMessage();
 
-            if(isset($this->state['message_id']))
+            $response = $this->telegramBotApi->sendMessage(
+                $this->telegramBotApi->chat_id,
+                '~',
+                [
+                    'reply_markup' => $this->telegramBotApi->removeCustomKeyboard()
+                ]
+            );
+            $response = new Response($response);
+
+            if($response->ok()){
+                $this->telegramBotApi->deleteMessage(
+                    $this->telegramBotApi->chat_id,
+                    $response->getResult()->getMessageId()
+                );
+            }
+
+            if(isset($this->state['message_id']) && ! $this->isInlineKeyboard)
                 $this->telegramBotApi->deleteMessage(
                     $this->telegramBotApi->chat_id,
                     $this->state['message_id']
                 );
-        }
-
-        $update = $this->telegramBotApi->update;
-
-        if($this->isInlineKeyboard and $update->isMessage()){
-            $this->telegramBotApi->deleteCurrentMessage();
-            $this->telegramBotApi->message = null;
         }
     }
 
@@ -131,24 +139,6 @@ class SelectFormField extends FormField{
 
         $update = $this->telegramBotApi->update;
 
-        if($update->isMessage() and $this->isInlineKeyboard){
-            $response = $this->telegramBotApi->sendMessage(
-                $this->telegramBotApi->chat_id,
-                '~',
-                [
-                    'reply_markup' => $this->telegramBotApi->removeCustomKeyboard()
-                ]
-            );
-            $response = new Response($response);
-
-            if($response->ok()){
-                $this->telegramBotApi->deleteMessage(
-                    $this->telegramBotApi->chat_id,
-                    $response->getResult()->getMessageId()
-                );
-            }
-        }
-
         $keyboard = new Keyboard();
 
         foreach ($this->options as $option) {
@@ -162,20 +152,22 @@ class SelectFormField extends FormField{
             $keyboard->newRow();
         }
 
+        $keyboard->newRow();
+
         $options = [
-            'reply_markup' => $this->isInlineKeyboard?$keyboard->initInlineKeyboard():$keyboard->initCustomKeyboard()
+            'reply_markup' => $this->createNavigatorButtons($keyboard)
         ];
 
-        if($update->isMessage() || ($update->isCallbackQuery() && !$this->isInlineKeyboard)){
-            $response = $this->telegramBotApi->sendMessage(
-                $this->telegramBotApi->chat_id,
-                $this->text,
-                $options
-            );
-        }else if($update->isCallbackQuery()){
+        if($update->isCallbackQuery()){
             $response = $this->telegramBotApi->editMessageText(
                 $this->telegramBotApi->chat_id,
                 $this->telegramBotApi->message_id,
+                $this->text,
+                $options
+            );
+        }else if(($update->isMessage() && (!$this->isInlineKeyboard || !isset($this->state['cp']))) || ($update->isCallbackQuery() && !$this->isInlineKeyboard)){
+            $response = $this->telegramBotApi->sendMessage(
+                $this->telegramBotApi->chat_id,
                 $this->text,
                 $options
             );
@@ -183,6 +175,7 @@ class SelectFormField extends FormField{
 
         if(isset($response['ok']) and $response['ok']){
             $this->state['message_id'] = $response['result']['message_id'];
+            $this->state['cp'] = true;
         }
     }
 }
