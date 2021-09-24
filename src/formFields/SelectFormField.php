@@ -80,7 +80,7 @@ class SelectFormField extends FormField
     {
         $update = $this->telegramBotApi->update;
 
-        if(!$this->isInlineKeyboard and $update->isCallbackQuery()){
+        if(!$this->isInlineKeyboard && $update->isCallbackQuery()){
             $this->telegramBotApi->deleteMessage(
                 $this->telegramBotApi->chat_id,
                 $this->telegramBotApi->message_id
@@ -158,16 +158,16 @@ class SelectFormField extends FormField
             'reply_markup' => $this->createNavigatorButtons($keyboard)
         ];
 
-        if($update->isCallbackQuery()){
-            $response = $this->telegramBotApi->editMessageText(
+        if((!$this->isInlineKeyboard && $update->isCallbackQuery() && !isset($this->state['cp'])) || ($update->isMessage() && (!$this->isInlineKeyboard || !isset($this->state['cp'])))) {
+            $response = $this->telegramBotApi->sendMessage(
                 $this->telegramBotApi->chat_id,
-                $this->telegramBotApi->message_id,
                 $this->text,
                 $options
             );
-        }else if(($update->isMessage() && (!$this->isInlineKeyboard || !isset($this->state['cp']))) || ($update->isCallbackQuery() && !$this->isInlineKeyboard)){
-            $response = $this->telegramBotApi->sendMessage(
+        } else if($update->isCallbackQuery()) {
+            $response = $this->telegramBotApi->editMessageText(
                 $this->telegramBotApi->chat_id,
+                $this->telegramBotApi->message_id,
                 $this->text,
                 $options
             );

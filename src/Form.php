@@ -114,7 +114,7 @@ class Form{
 
                 if(empty($this->form->getCurrentFormField($answers))){
                     $formField->afterOverAction();
-                    $answers = array_merge($answers,$this->form->hiddenInputs);
+                    $answers = array_merge($this->form->hiddenInputs,$answers);
                     $this->callback($scenario['success'],$answers);
                 }else{
                     $this->render($cache);
